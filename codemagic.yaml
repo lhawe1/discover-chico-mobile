@@ -51,13 +51,20 @@ workflows:
         script: |
           cd ios && pod install
 
+      - name: Set up provisioning profiles
+        script: |
+          app-store-connect fetch-signing-files $BUNDLE_ID \
+            --type IOS_APP_STORE \
+            --create
+      - name: Use provisioning profiles
+        script: |
+          xcode-project use-profiles
       - name: Build ipa for distribution
         script: |
           cd ios
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-flags="-allowProvisioningUpdates"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
