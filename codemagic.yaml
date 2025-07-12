@@ -11,6 +11,7 @@ workflows:
         BUNDLE_IDENTIFIER: BUNDLE_ID
         CERTIFICATE_PRIVATE_KEY: IOS_DISTRIBUTION_CERTIFICATE
         CERTIFICATE_PASSWORD: IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
+        APPLE_TEAM_ID: APPLE_TEAM_ID
       node: 18.17.0
       xcode: latest
       cocoapods: default
@@ -48,8 +49,8 @@ workflows:
           keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $CERTIFICATE_PASSWORD
       - name: Create App ID and fetch signing files
         script: |
-          app-store-connect create-app-id $BUNDLE_IDENTIFIER --name "Discover Chico" || echo "App ID might already exist"
-          app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create
+          app-store-connect create-app-id $BUNDLE_IDENTIFIER --name "Discover Chico" --team-id $APPLE_TEAM_ID || echo "App ID might already exist"
+          app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create --team-id $APPLE_TEAM_ID
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
@@ -62,7 +63,8 @@ workflows:
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
-            --path build/ios/ipa/*.ipa
+            --path build/ios/ipa/*.ipa \
+            --team-id $APPLE_TEAM_ID
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
@@ -71,7 +73,3 @@ workflows:
     publishing:
       email:
         recipients:
-          - user@example.com
-        notify:
-          success: true
-          failure: true
