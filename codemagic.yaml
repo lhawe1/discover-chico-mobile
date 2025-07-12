@@ -8,11 +8,58 @@ workflows:
         APP_STORE_CONNECT_ISSUER_ID: APPLE_ISSUER_ID
         APP_STORE_CONNECT_KEY_IDENTIFIER: APPLE_KEY_ID
         APP_STORE_CONNECT_PRIVATE_KEY: APPLE_PRIVATE_KEY
-        APPLE_TEAM_ID: APPLE_TEAM_ID
       node: 18.17.0
       xcode: latest
       cocoapods: default
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.discoverchico.mobile
-    # ... rest of configuration
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Install Expo CLI
+        script: |
+          npm install -g @expo/cli@latest
+      - name: Prebuild
+        script: |
+          npx expo prebuild --platform ios --clean
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Set up iOS code signing with Codemagic automatic management
+        script: |
+          echo "Using Codemagic automatic code signing"
+          echo "Bundle identifier: com.discoverchico.mobile"
+          echo "Codemagic will automatically handle certificates and profiles"
+      - name: Build ipa for distribution
+        script: |
+          cd ios
+          xcode-project build-ipa \
+            --workspace "DiscoverChico.xcworkspace" \
+            --scheme "DiscoverChico"
+      - name: Upload to TestFlight
+        script: |
+          app-store-connect publish \
+            --path build/ios/ipa/*.ipa
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      email:
+        recipients:
+          - lhawe1@gmail.com
+        notify:
+          success: true
+          failure: true
