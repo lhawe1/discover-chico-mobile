@@ -8,11 +8,7 @@ workflows:
         APP_STORE_CONNECT_ISSUER_ID: APPLE_ISSUER_ID
         APP_STORE_CONNECT_KEY_IDENTIFIER: APPLE_KEY_ID
         APP_STORE_CONNECT_PRIVATE_KEY: APPLE_PRIVATE_KEY
-        BUNDLE_IDENTIFIER: BUNDLE_ID
-        CERTIFICATE_PRIVATE_KEY: IOS_DISTRIBUTION_CERTIFICATE
-        CERTIFICATE_PASSWORD: IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
         APPLE_TEAM_ID: APPLE_TEAM_ID
-
       node: 18.17.0
       xcode: latest
       cocoapods: default
@@ -41,24 +37,10 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Initialize keychain to be used for codesigning using Codemagic CLI 'keychain' command
+      - name: Set up iOS code signing with automatic management
         script: |
-          keychain initialize
-      - name: Set up iOS distribution certificate
-        script: |
-          echo $CERTIFICATE_PRIVATE_KEY | base64 --decode > /tmp/certificate.p12
-          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $CERTIFICATE_PASSWORD
-      - name: Create App ID and fetch signing files
-        script: |
-          echo "Using existing App ID: $BUNDLE_IDENTIFIER"
-          app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create --team-id $APPLE_TEAM_ID || {
-            echo "Failed to fetch profiles, attempting manual creation..."
-            app-store-connect create-profile $BUNDLE_IDENTIFIER --type IOS_APP_STORE --team-id $APPLE_TEAM_ID --certificate-id $(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | awk '{print $2}')
-            app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --team-id $APPLE_TEAM_ID
-          }
-      - name: Set up code signing settings on Xcode project
-        script: |
-          xcode-project use-profiles
+          echo "Using automatic code signing for Team ID: $APPLE_TEAM_ID"
+          echo "Bundle identifier: org.discoverchico.app"
       - name: Build ipa for distribution
         script: |
           cd ios
@@ -68,8 +50,7 @@ workflows:
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
-            --path build/ios/ipa/*.ipa \
-            --team-id $APPLE_TEAM_ID
+            --path build/ios/ipa/*.ipa
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
