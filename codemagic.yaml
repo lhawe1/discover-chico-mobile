@@ -13,7 +13,7 @@ workflows:
       xcode: latest
       cocoapods: default
       ios_signing:
-        distribution_type: development
+        distribution_type: app_store
         bundle_identifier: com.discoverchico.app
     triggering:
       events:
@@ -39,11 +39,11 @@ workflows:
           cd ios && pod install
       - name: Set up iOS code signing with automatic management
         script: |
-          echo "Testing with development distribution type instead of app_store"
-          echo "Bundle identifier: com.discoverchico.app"
+          echo "App Store distribution with properly saved App ID"
+          echo "Bundle identifier: com.discoverchico.app (verified saved in Apple Developer Console)"
           echo "Team ID: $APPLE_TEAM_ID"
-          echo "Distribution type: development (bypassing app_store profile requirement)"
-          echo "This should create development provisioning profile instead"
+          echo "Distribution type: app_store (for TestFlight deployment)"
+          echo "Fresh API key with Account Holder + Admin permissions"
       - name: Build ipa for distribution
         script: |
           cd ios
