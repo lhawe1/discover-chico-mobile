@@ -27,7 +27,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.discoverchico.app
-        apple_team_id: "8DV9LTNSH7"
     triggering:
       events:
         - push
@@ -77,11 +76,3 @@ workflows:
         submit_to_app_store: false
         beta_groups:
           - Internal Testing
-        beta_build_localizations:
-          - locale: en-US
-            whats_new: |
-              ✅ Full-featured local business coupon platform
-              ✅ Camera QR code scanning for coupon redemption
-              ✅ Location-based deal discovery
-              ✅ Push notifications for new deals
-              ✅ Comprehensive business management tools
