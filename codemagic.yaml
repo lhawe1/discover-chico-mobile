@@ -13,7 +13,7 @@ workflows:
       xcode: latest
       cocoapods: default
       ios_signing:
-        distribution_type: app_store
+        distribution_type: development
         bundle_identifier: com.discoverchico.app
     triggering:
       events:
@@ -37,14 +37,13 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up iOS code signing with explicit Team ID
+      - name: Set up iOS code signing with automatic management
         script: |
-          echo "Using Codemagic automatic code signing with explicit Team ID"
+          echo "Testing with development distribution type instead of app_store"
           echo "Bundle identifier: com.discoverchico.app"
           echo "Team ID: $APPLE_TEAM_ID"
-          echo "Paid App Agreement: Active"
-          echo "API Key: Account Holder + Admin permissions"
-          echo "App ID: Manually created in Apple Developer Console"
+          echo "Distribution type: development (bypassing app_store profile requirement)"
+          echo "This should create development provisioning profile instead"
       - name: Build ipa for distribution
         script: |
           cd ios
