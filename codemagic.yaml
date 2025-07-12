@@ -15,6 +15,7 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.discoverchico.app
+        certificate: hawesweb
     triggering:
       events:
         - push
@@ -37,17 +38,12 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Force profile creation using explicit team specification
+      - name: Using uploaded certificate approach
         script: |
-          echo "Attempting explicit team-based signing approach"
-          echo "Bundle identifier: com.discoverchico.app (verified saved)"
-          echo "Team ID: $APPLE_TEAM_ID"
+          echo "Using uploaded certificate: hawesweb (production type)"
+          echo "Bundle identifier: com.discoverchico.app"
           echo "Distribution type: app_store"
-          echo "API Key: Fresh with Account Holder + Admin permissions"
-          echo "Paid App Agreement: Active"
-          echo ""
-          echo "Forcing Codemagic to create App Store provisioning profile..."
-          echo "If this fails, we'll need to upload manual certificates to Codemagic dashboard"
+          echo "This bypasses automatic certificate creation issues"
       - name: Build ipa for distribution
         script: |
           cd ios
