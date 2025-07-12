@@ -12,6 +12,7 @@ workflows:
         CERTIFICATE_PRIVATE_KEY: IOS_DISTRIBUTION_CERTIFICATE
         CERTIFICATE_PASSWORD: IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
         APPLE_TEAM_ID: APPLE_TEAM_ID
+
       node: 18.17.0
       xcode: latest
       cocoapods: default
@@ -73,3 +74,7 @@ workflows:
     publishing:
       email:
         recipients:
+          - lhawe1@gmail.com
+        notify:
+          success: true
+          failure: true
