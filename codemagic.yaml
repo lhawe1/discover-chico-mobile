@@ -6,12 +6,15 @@ workflows:
     integrations:
       app_store_connect: codemagic
     environment:
-      groups:
-        - app_store_credentials
       vars:
         XCODE_WORKSPACE: "ios/DiscoverChico.xcworkspace"
         XCODE_SCHEME: "DiscoverChico"
         BUNDLE_ID: "org.discoverchico.app"
+        APP_STORE_CONNECT_ISSUER_ID: $APPLE_DEVELOPER_ISSUER_ID
+        APP_STORE_CONNECT_KEY_IDENTIFIER: $APPLE_DEVELOPER_KEY_ID
+        APP_STORE_CONNECT_PRIVATE_KEY: $APPLE_DEVELOPER_PRIVATE_KEY
+        CERTIFICATE_PRIVATE_KEY: $IOS_DISTRIBUTION_CERTIFICATE
+        CERTIFICATE_PASSWORD: $IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
       node: 18.17.0
       xcode: latest
       cocoapods: default
