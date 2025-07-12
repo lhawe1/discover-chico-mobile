@@ -3,11 +3,7 @@ workflows:
     name: iOS Workflow
     max_build_duration: 120
     instance_type: mac_mini_m2
-    integrations:
-      app_store_connect: codemagic
     environment:
-      groups:
-        - app_store_credentials
       vars:
         APP_STORE_CONNECT_ISSUER_ID: $APPLE_ISSUER_ID
         APP_STORE_CONNECT_KEY_IDENTIFIER: $APPLE_KEY_ID
@@ -63,7 +59,10 @@ workflows:
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       app_store_connect:
-        auth: integration
+        auth: key
+        key_id: $APPLE_KEY_ID
+        issuer_id: $APPLE_ISSUER_ID
+        private_key: $APPLE_PRIVATE_KEY
         submit_to_testflight: true
         beta_groups:
           - Internal Testing
