@@ -9,12 +9,16 @@ workflows:
         APP_STORE_CONNECT_KEY_IDENTIFIER: APPLE_KEY_ID
         APP_STORE_CONNECT_PRIVATE_KEY: APPLE_PRIVATE_KEY
         APPLE_TEAM_ID: APPLE_TEAM_ID
+        IOS_CERTIFICATE_PASSWORD: temporarypassword
       node: 18.17.0
       xcode: latest
       cocoapods: default
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.discoverchico.app
+        certificate: /tmp/ios_distribution_certificate.p12
+        certificate_password: $IOS_CERTIFICATE_PASSWORD
+        provisioning_profile: /tmp/ios_distribution_profile.mobileprovision
     triggering:
       events:
         - push
@@ -37,13 +41,128 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up iOS code signing with automatic management
+      - name: Create manual certificates and provisioning profiles
         script: |
-          echo "App Store distribution with properly saved App ID"
-          echo "Bundle identifier: com.discoverchico.app (verified saved in Apple Developer Console)"
-          echo "Team ID: $APPLE_TEAM_ID"
-          echo "Distribution type: app_store (for TestFlight deployment)"
-          echo "Fresh API key with Account Holder + Admin permissions"
+          echo "Switching to manual signing approach"
+          echo "Creating iOS distribution certificate..."
+          
+          # Create certificate signing request
+          openssl req -new -newkey rsa:2048 -nodes -keyout ios_private_key.pem \
+            -out ios_certificate_request.csr \
+            -subj "/C=US/ST=CA/L=San Francisco/O=Discover Chico/CN=iOS Distribution"
+          
+          # Create distribution certificate using Apple API
+          curl -X POST "https://api.appstoreconnect.apple.com/v1/certificates" \
+            -H "Authorization: Bearer $(python3 -c "
+import jwt
+import time
+import base64
+import os
+
+# JWT token generation for Apple API
+key_id = os.environ['APP_STORE_CONNECT_KEY_IDENTIFIER']
+issuer_id = os.environ['APP_STORE_CONNECT_ISSUER_ID']
+private_key = base64.b64decode(os.environ['APP_STORE_CONNECT_PRIVATE_KEY']).decode('utf-8')
+
+header = {'alg': 'ES256', 'kid': key_id, 'typ': 'JWT'}
+payload = {
+    'iss': issuer_id,
+    'aud': 'appstoreconnect-v1',
+    'iat': int(time.time()),
+    'exp': int(time.time()) + 1200
+}
+
+token = jwt.encode(payload, private_key, algorithm='ES256', headers=header)
+print(token)
+")" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"data\": {
+                \"type\": \"certificates\",
+                \"attributes\": {
+                  \"certificateType\": \"IOS_DISTRIBUTION\",
+                  \"csrContent\": \"$(base64 -i ios_certificate_request.csr | tr -d '\n')\"
+                }
+              }
+            }" > certificate_response.json
+          
+          # Extract certificate and create .p12
+          python3 -c "
+import json
+import base64
+with open('certificate_response.json', 'r') as f:
+    data = json.load(f)
+    cert_content = data['data']['attributes']['certificateContent']
+    with open('ios_distribution_certificate.pem', 'w') as cert_file:
+        cert_file.write(cert_content)
+"
+          
+          # Create .p12 file
+          openssl pkcs12 -export -out /tmp/ios_distribution_certificate.p12 \
+            -inkey ios_private_key.pem \
+            -in ios_distribution_certificate.pem \
+            -password pass:temporarypassword
+          
+          # Create provisioning profile
+          curl -X POST "https://api.appstoreconnect.apple.com/v1/profiles" \
+            -H "Authorization: Bearer $(python3 -c "
+import jwt
+import time
+import base64
+import os
+
+key_id = os.environ['APP_STORE_CONNECT_KEY_IDENTIFIER']
+issuer_id = os.environ['APP_STORE_CONNECT_ISSUER_ID']
+private_key = base64.b64decode(os.environ['APP_STORE_CONNECT_PRIVATE_KEY']).decode('utf-8')
+
+header = {'alg': 'ES256', 'kid': key_id, 'typ': 'JWT'}
+payload = {
+    'iss': issuer_id,
+    'aud': 'appstoreconnect-v1',
+    'iat': int(time.time()),
+    'exp': int(time.time()) + 1200
+}
+
+token = jwt.encode(payload, private_key, algorithm='ES256', headers=header)
+print(token)
+")" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"data\": {
+                \"type\": \"profiles\",
+                \"attributes\": {
+                  \"name\": \"Discover Chico App Store Distribution\",
+                  \"profileType\": \"IOS_APP_STORE\"
+                },
+                \"relationships\": {
+                  \"bundleId\": {
+                    \"data\": {
+                      \"type\": \"bundleIds\",
+                      \"id\": \"$(curl -H 'Authorization: Bearer TOKEN' 'https://api.appstoreconnect.apple.com/v1/bundleIds?filter[identifier]=com.discoverchico.app' | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"data\"][0][\"id\"])')\"
+                    }
+                  },
+                  \"certificates\": {
+                    \"data\": [{
+                      \"type\": \"certificates\",
+                      \"id\": \"$(python3 -c 'import json; print(json.load(open(\"certificate_response.json\"))[\"data\"][\"id\"])')\"
+                    }]
+                  }
+                }
+              }
+            }" > profile_response.json
+          
+          # Extract provisioning profile
+          python3 -c "
+import json
+import base64
+with open('profile_response.json', 'r') as f:
+    data = json.load(f)
+    profile_content = data['data']['attributes']['profileContent']
+    with open('/tmp/ios_distribution_profile.mobileprovision', 'wb') as profile_file:
+        profile_file.write(base64.b64decode(profile_content))
+"
+          
+          echo "Manual certificate and provisioning profile created successfully"
       - name: Build ipa for distribution
         script: |
           cd ios
