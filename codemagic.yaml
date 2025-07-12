@@ -27,7 +27,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.discoverchico.app
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
     triggering:
       events:
         - push
