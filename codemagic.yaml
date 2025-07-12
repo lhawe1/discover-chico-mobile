@@ -50,8 +50,12 @@ workflows:
           keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $CERTIFICATE_PASSWORD
       - name: Create App ID and fetch signing files
         script: |
-          app-store-connect create-app-id $BUNDLE_IDENTIFIER --name "Discover Chico" --team-id $APPLE_TEAM_ID || echo "App ID might already exist"
-          app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create --team-id $APPLE_TEAM_ID
+          echo "Using existing App ID: $BUNDLE_IDENTIFIER"
+          app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create --team-id $APPLE_TEAM_ID || {
+            echo "Failed to fetch profiles, attempting manual creation..."
+            app-store-connect create-profile $BUNDLE_IDENTIFIER --type IOS_APP_STORE --team-id $APPLE_TEAM_ID --certificate-id $(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | awk '{print $2}')
+            app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --team-id $APPLE_TEAM_ID
+          }
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
