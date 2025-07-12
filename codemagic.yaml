@@ -46,8 +46,9 @@ workflows:
         script: |
           echo $CERTIFICATE_PRIVATE_KEY | base64 --decode > /tmp/certificate.p12
           keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $CERTIFICATE_PASSWORD
-      - name: Fetch signing files
+      - name: Create App ID and fetch signing files
         script: |
+          app-store-connect create-app-id $BUNDLE_IDENTIFIER --name "Discover Chico" || echo "App ID might already exist"
           app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create
       - name: Set up code signing settings on Xcode project
         script: |
