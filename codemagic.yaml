@@ -27,6 +27,7 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.discoverchico.app
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
     triggering:
       events:
         - push
@@ -51,8 +52,9 @@ workflows:
         script: |
           cd ios && pod install
 
-      - name: Set up provisioning profiles
+      - name: Create App ID and provisioning profile
         script: |
+          app-store-connect create-app-id $BUNDLE_ID --name "Discover Chico" || true
           app-store-connect fetch-signing-files $BUNDLE_ID \
             --type IOS_APP_STORE \
             --create
