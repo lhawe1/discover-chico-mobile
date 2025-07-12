@@ -8,6 +8,7 @@ workflows:
         APP_STORE_CONNECT_ISSUER_ID: APPLE_ISSUER_ID
         APP_STORE_CONNECT_KEY_IDENTIFIER: APPLE_KEY_ID
         APP_STORE_CONNECT_PRIVATE_KEY: APPLE_PRIVATE_KEY
+        APPLE_TEAM_ID: APPLE_TEAM_ID
       node: 18.17.0
       xcode: latest
       cocoapods: default
@@ -36,13 +37,14 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up iOS code signing with Codemagic automatic management
+      - name: Set up iOS code signing with explicit Team ID
         script: |
-          echo "Using Codemagic automatic code signing"
+          echo "Using Codemagic automatic code signing with explicit Team ID"
           echo "Bundle identifier: com.discoverchico.app"
+          echo "Team ID: $APPLE_TEAM_ID"
           echo "Paid App Agreement: Active"
-          echo "Using manually created App ID from Apple Developer Console"
-          echo "Codemagic will create provisioning profile for existing App ID"
+          echo "API Key: Account Holder + Admin permissions"
+          echo "App ID: Manually created in Apple Developer Console"
       - name: Build ipa for distribution
         script: |
           cd ios
