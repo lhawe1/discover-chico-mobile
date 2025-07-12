@@ -1,6 +1,6 @@
 workflows:
   react-native-ios:
-    name: Discover Chico iOS - Full Featured
+    name: Discover Chico iOS - Production TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
@@ -11,19 +11,23 @@ workflows:
         XCODE_SCHEME: "DiscoverChico"
         BUNDLE_ID: "org.discoverchico.app"
         APP_STORE_CONNECT_ISSUER_ID: "ebb456d5-e70f-4495-a186-8311e7535ab8"
-        APP_STORE_CONNECT_KEY_IDENTIFIER: "8DV9LTNSH7"
+        APP_STORE_CONNECT_KEY_IDENTIFIER: "7Y0BTLM2725V"
         APP_STORE_CONNECT_PRIVATE_KEY: |
           -----BEGIN PRIVATE KEY-----
-          eee5203aae2e4f7b96d1f93bba4b89eb
+          MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgtwRhySrLurlMv4t5
+          HHgPlZC59y0G8dZu3QnyXUxkbUOgCgYIKoZIzj0DAQehRANCAASOXSsb9rbuSTpf
+          viWEdgKTVV9eD1az3Ck7xMvKHOjveO9yTC8a6FtFKOUeXNxD+eytAZfBA+HiOXdR
+          DxT07c75
           -----END PRIVATE KEY-----
-        CERTIFICATE_PRIVATE_KEY: "YOUR_BASE64_CERTIFICATE_HERE"
-        CERTIFICATE_PASSWORD: "YOUR_CERTIFICATE_PASSWORD_HERE"
+
+        APPLE_TEAM_ID: "8DV9LTNSH7"
       node: 18.17.0
       xcode: latest
       cocoapods: default
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.discoverchico.app
+        apple_team_id: "8DV9LTNSH7"
     triggering:
       events:
         - push
@@ -32,6 +36,9 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Set up keychain to be used for code signing
+        script: |
+          keychain initialize
       - name: Install npm dependencies
         script: |
           npm ci
@@ -44,16 +51,14 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up code signing
-        script: |
-          cd ios
-          xcode-project use-profiles
+
       - name: Build ipa for distribution
         script: |
           cd ios
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags="-allowProvisioningUpdates"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
@@ -70,3 +75,13 @@ workflows:
         auth: integration
         submit_to_testflight: true
         submit_to_app_store: false
+        beta_groups:
+          - Internal Testing
+        beta_build_localizations:
+          - locale: en-US
+            whats_new: |
+              ✅ Full-featured local business coupon platform
+              ✅ Camera QR code scanning for coupon redemption
+              ✅ Location-based deal discovery
+              ✅ Push notifications for new deals
+              ✅ Comprehensive business management tools
