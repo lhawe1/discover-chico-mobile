@@ -13,7 +13,7 @@ workflows:
       cocoapods: default
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.discoverchico.mobile
+        bundle_identifier: com.discoverchico.app
     triggering:
       events:
         - push
@@ -39,8 +39,10 @@ workflows:
       - name: Set up iOS code signing with Codemagic automatic management
         script: |
           echo "Using Codemagic automatic code signing"
-          echo "Bundle identifier: com.discoverchico.mobile"
-          echo "Codemagic will automatically handle certificates and profiles"
+          echo "Bundle identifier: com.discoverchico.app"
+          echo "Paid App Agreement: Active"
+          echo "Using manually created App ID from Apple Developer Console"
+          echo "Codemagic will create provisioning profile for existing App ID"
       - name: Build ipa for distribution
         script: |
           cd ios
