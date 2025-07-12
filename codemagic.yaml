@@ -6,7 +6,7 @@ workflows:
     environment:
       vars:
         APP_STORE_CONNECT_ISSUER_ID: APPLE_ISSUER_ID
-        APP_STORE_CONNECT_KEY_IDENTIFIER: APPLE_KEY_ID
+        APP_STORE_CONNECT_KEY_IDENTIFIER: 6228NDNUSN
         APP_STORE_CONNECT_PRIVATE_KEY: APPLE_PRIVATE_KEY
         APPLE_TEAM_ID: APPLE_TEAM_ID
       node: 18.17.0
@@ -15,6 +15,7 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.discoverchico.app
+        provisioning_profile_name: "Discover Chico App Store Distribution"
     triggering:
       events:
         - push
@@ -37,9 +38,10 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up code signing with uploaded certificate
+      - name: Set up code signing with provisioning profile
         script: |
-          echo "Using uploaded certificate: hawesweb (production type)"
+          echo "Using provisioning profile: Discover Chico App Store Distribution"
+          echo "Using certificate: hawesweb (production type)"
           echo "Setting up code signing profiles..."
           xcode-project use-profiles
       - name: Build ipa for distribution
