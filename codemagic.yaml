@@ -58,17 +58,19 @@ workflows:
           xcode-project build-ipa \
             --workspace "DiscoverChico.xcworkspace" \
             --scheme "DiscoverChico"
+      - name: Upload to TestFlight
+        script: |
+          app-store-connect publish \
+            --path build/ios/ipa/*.ipa
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
-      app_store_connect:
-        auth: key
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        private_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        submit_to_testflight: true
-        beta_groups:
-          - Internal Testing
+      email:
+        recipients:
+          - user@example.com
+        notify:
+          success: true
+          failure: true
