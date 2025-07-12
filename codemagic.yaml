@@ -14,52 +14,5 @@ workflows:
       cocoapods: default
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: org.discoverchico.app
-    triggering:
-      events:
-        - push
-        - tag
-        - pull_request
-      branch_patterns:
-        - pattern: main
-          include: true
-          source: true
-    scripts:
-      - name: Install dependencies
-        script: |
-          npm ci
-      - name: Install Expo CLI
-        script: |
-          npm install -g @expo/cli@latest
-      - name: Prebuild
-        script: |
-          npx expo prebuild --platform ios --clean
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios && pod install
-      - name: Set up iOS code signing with automatic management
-        script: |
-          echo "Using automatic code signing for Team ID: $APPLE_TEAM_ID"
-          echo "Bundle identifier: org.discoverchico.app"
-      - name: Build ipa for distribution
-        script: |
-          cd ios
-          xcode-project build-ipa \
-            --workspace "DiscoverChico.xcworkspace" \
-            --scheme "DiscoverChico"
-      - name: Upload to TestFlight
-        script: |
-          app-store-connect publish \
-            --path build/ios/ipa/*.ipa
-    artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
-    publishing:
-      email:
-        recipients:
-          - lhawe1@gmail.com
-        notify:
-          success: true
-          failure: true
+        bundle_identifier: com.discoverchico.mobile
+    # ... rest of configuration
