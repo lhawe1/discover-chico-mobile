@@ -5,18 +5,18 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       vars:
-        APP_STORE_CONNECT_ISSUER_ID: $APPLE_ISSUER_ID
-        APP_STORE_CONNECT_KEY_IDENTIFIER: $APPLE_KEY_ID
-        APP_STORE_CONNECT_PRIVATE_KEY: $APPLE_PRIVATE_KEY
-        BUNDLE_IDENTIFIER: $BUNDLE_ID
-        CERTIFICATE_PRIVATE_KEY: $IOS_DISTRIBUTION_CERTIFICATE
-        CERTIFICATE_PASSWORD: $IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
+        APP_STORE_CONNECT_ISSUER_ID: APPLE_ISSUER_ID
+        APP_STORE_CONNECT_KEY_IDENTIFIER: APPLE_KEY_ID
+        APP_STORE_CONNECT_PRIVATE_KEY: APPLE_PRIVATE_KEY
+        BUNDLE_IDENTIFIER: BUNDLE_ID
+        CERTIFICATE_PRIVATE_KEY: IOS_DISTRIBUTION_CERTIFICATE
+        CERTIFICATE_PASSWORD: IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
       node: 18.17.0
       xcode: latest
       cocoapods: default
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: $BUNDLE_ID
+        bundle_identifier: org.discoverchico.app
     triggering:
       events:
         - push
