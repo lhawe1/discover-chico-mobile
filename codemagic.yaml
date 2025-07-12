@@ -3,17 +3,20 @@ workflows:
     name: iOS Workflow
     max_build_duration: 120
     instance_type: mac_mini_m2
-    integrations:
-      app_store_connect: app_store_credentials
     environment:
       vars:
         APP_STORE_CONNECT_ISSUER_ID: $APPLE_ISSUER_ID
         APP_STORE_CONNECT_KEY_IDENTIFIER: $APPLE_KEY_ID
         APP_STORE_CONNECT_PRIVATE_KEY: $APPLE_PRIVATE_KEY
         BUNDLE_IDENTIFIER: $BUNDLE_ID
+        CERTIFICATE_PRIVATE_KEY: $IOS_DISTRIBUTION_CERTIFICATE
+        CERTIFICATE_PASSWORD: $IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
       node: 18.17.0
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: $BUNDLE_ID
     triggering:
       events:
         - push
@@ -39,12 +42,13 @@ workflows:
       - name: Initialize keychain to be used for codesigning using Codemagic CLI 'keychain' command
         script: |
           keychain initialize
+      - name: Set up iOS distribution certificate
+        script: |
+          echo $CERTIFICATE_PRIVATE_KEY | base64 --decode > /tmp/certificate.p12
+          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $CERTIFICATE_PASSWORD
       - name: Fetch signing files
         script: |
           app-store-connect fetch-signing-files $BUNDLE_IDENTIFIER --type IOS_APP_STORE --create
-      - name: Use system default keychain
-        script: |
-          keychain add-certificates
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
@@ -61,7 +65,10 @@ workflows:
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       app_store_connect:
-        auth: integration
+        auth: key
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        private_key: $APP_STORE_CONNECT_PRIVATE_KEY
         submit_to_testflight: true
         beta_groups:
           - Internal Testing
